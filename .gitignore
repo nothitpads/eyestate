@@ -30,3 +30,4 @@ manifests/
 !readme.md
 
 *.onnx
+*.data
