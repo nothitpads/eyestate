@@ -1,17 +1,3 @@
-# src/data_prep.py
-"""
-Data preparation for eye-state classification (step 2.a).
-- Scans data/raw/train/{open,close}
-- Builds stratified train/val/test splits
-- Creates torchvision transforms: train augmentations, val/test deterministic transforms
-- Exposes get_dataloaders(...) to return PyTorch DataLoaders
-- Writes CSV manifests for reproducibility
-
-Usage:
-    from training.preprocess import get_dataloaders
-    dl_train, dl_val, dl_test, meta = get_dataloaders(data_dir="data/raw", batch_size=32, val_pct=0.1, test_pct=0.1, seed=42)
-"""
-
 import os
 import csv
 import random
@@ -23,16 +9,15 @@ from torch.utils.data import Dataset, DataLoader
 from PIL import Image
 from torchvision import transforms
 
-# -----------------------
 # Configuration defaults
-# -----------------------
+
 IMAGENET_MEAN = [0.485, 0.456, 0.406]
 IMAGENET_STD  = [0.229, 0.224, 0.225]
 
 
-# -----------------------
-# Utility: list files by class
-# -----------------------
+
+# list files by class
+
 def _scan_class_folders(base_dir: str, classes: List[str]) -> List[Tuple[str, int]]:
     """
     Returns list of (filepath, label_idx)
@@ -53,9 +38,9 @@ def _scan_class_folders(base_dir: str, classes: List[str]) -> List[Tuple[str, in
     return items
 
 
-# -----------------------
-# Stratified split (per-class splitting)
-# -----------------------
+
+# per-class splitting
+
 def stratified_split(items: List[Tuple[str,int]], val_pct: float, test_pct: float, seed: int=42):
     """
     Splits items into train/val/test maintaining class ratios.
@@ -73,9 +58,7 @@ def stratified_split(items: List[Tuple[str,int]], val_pct: float, test_pct: floa
         n = len(paths)
         n_test = int(round(n * test_pct))
         n_val  = int(round(n * val_pct))
-        # ensure sum <= n
         if n_test + n_val >= n:
-            # fallback: ensure at least 1 train if possible
             n_test = max(0, min(n_test, n-2))
             n_val  = max(0, min(n_val, n-1-n_test))
 
@@ -87,22 +70,15 @@ def stratified_split(items: List[Tuple[str,int]], val_pct: float, test_pct: floa
         val_list.extend([(p, label) for p in val_paths])
         train_list.extend([(p, label) for p in train_paths])
 
-    # shuffle final lists
     random.shuffle(train_list)
     random.shuffle(val_list)
     random.shuffle(test_list)
     return {"train": train_list, "val": val_list, "test": test_list}
 
 
-# -----------------------
-# Dataset wrapper (from file list)
-# -----------------------
+# from file list
 class FileListImageDataset(Dataset):
     def __init__(self, samples: List[Tuple[str,int]], transform=None):
-        """
-        samples: list of (filepath, label)
-        transform: torchvision transforms applied to PIL image
-        """
         self.samples = samples
         self.transform = transform
 
@@ -117,9 +93,7 @@ class FileListImageDataset(Dataset):
         return img, label
 
 
-# -----------------------
 # Transforms
-# -----------------------
 def get_transforms(image_size: int = 224):
     """
     Returns (train_transform, val_transform, test_transform)
@@ -144,9 +118,8 @@ def get_transforms(image_size: int = 224):
     return train_t, val_test_t, val_test_t
 
 
-# -----------------------
+
 # CSV manifest writer
-# -----------------------
 def _write_manifest(manifest_path: str, items: List[Tuple[str,int]]):
     os.makedirs(os.path.dirname(manifest_path), exist_ok=True)
     with open(manifest_path, "w", newline="") as f:
@@ -156,9 +129,7 @@ def _write_manifest(manifest_path: str, items: List[Tuple[str,int]]):
             writer.writerow([p, l])
 
 
-# -----------------------
 # Main entry: dataloaders
-# -----------------------
 def get_dataloaders(
     data_dir: str = "data/raw",
     classes: List[str] = ["open", "close"],
@@ -175,33 +146,32 @@ def get_dataloaders(
     Build and return (train_loader, val_loader, test_loader, meta)
     meta contains counts and class mapping.
     """
-    # 1) scan
     items = _scan_class_folders(data_dir, classes)
 
-    # 2) split stratified
+    # split 
     splits = stratified_split(items, val_pct=val_pct, test_pct=test_pct, seed=seed)
 
-    # 3) transforms
+    # transforms
     train_tf, val_tf, test_tf = get_transforms(image_size=image_size)
 
-    # 4) datasets
+    # datasets
     ds_train = FileListImageDataset(splits["train"], transform=train_tf)
     ds_val   = FileListImageDataset(splits["val"], transform=val_tf)
     ds_test  = FileListImageDataset(splits["test"], transform=test_tf)
 
-    # 5) dataloaders
+    # dataloaders
     dl_train = DataLoader(ds_train, batch_size=batch_size, shuffle=True, num_workers=num_workers, pin_memory=pin_memory)
     dl_val   = DataLoader(ds_val,   batch_size=batch_size, shuffle=False, num_workers=num_workers, pin_memory=pin_memory)
     dl_test  = DataLoader(ds_test,  batch_size=batch_size, shuffle=False, num_workers=num_workers, pin_memory=pin_memory)
 
-    # 6) manifests
+    # manifests
     if save_manifests:
         manifest_root = Path("manifests")
         _write_manifest(str(manifest_root / "train.csv"), splits["train"])
         _write_manifest(str(manifest_root / "val.csv"),   splits["val"])
         _write_manifest(str(manifest_root / "test.csv"),  splits["test"])
 
-    # 7) meta
+    # meta
     meta = {
         "num_train": len(splits["train"]),
         "num_val":   len(splits["val"]),
@@ -212,12 +182,9 @@ def get_dataloaders(
 
     return dl_train, dl_val, dl_test, meta
 
-
-# -----------------------
-# Example CLI-run support
-# -----------------------
+# CLI-run support
 if __name__ == "__main__":
-    # quick smoke-run to create manifest files and print dataset sizes
+    # quick run to create manifest files and print dataset sizes
     dl_train, dl_val, dl_test, meta = get_dataloaders(
         data_dir="data/raw",
         classes=["open", "close"],

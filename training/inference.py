@@ -8,13 +8,11 @@ from flask_cors import CORS
 import sys
 import os
 
-# --------- config (match training) ----------
 IMAGE_SIZE = 80
 MEAN = [0.485, 0.456, 0.406]
 STD  = [0.229, 0.224, 0.225]
 CLASSES = ["open", "close"]
 DEVICE = torch.device("cpu")
-# --------------------------------------------
 
 transform = T.Compose([
     T.Resize((IMAGE_SIZE, IMAGE_SIZE)),
@@ -31,7 +29,6 @@ def import_build_model():
     If train module is not found, raise a clear error.
     """
     try:
-        # Attempt standard import (project root must be PYTHONPATH)
         from train import build_model
         return build_model
     except Exception as e:
@@ -42,11 +39,9 @@ def import_build_model():
         ) from e
 
 def load_model_state(pth):
-    # load checkpoint (may contain state dict under 'model_state' or full state_dict)
     ckpt = torch.load(pth, map_location=DEVICE)
     state = ckpt.get("model_state", ckpt)
     build_model = import_build_model()
-    # instantiate model exactly as in training
     model = build_model(num_classes=len(CLASSES), cbam=True, pretrained=False)
     model.load_state_dict(state)
     model.to(DEVICE)
@@ -56,7 +51,6 @@ def load_model_state(pth):
 @app.route("/predict", methods=["POST"])
 def predict():
     t0 = time.time()
-    # Accept multipart/form-data file 'image' or JSON base64 {'image':...}
     if "image" in request.files:
         img = Image.open(request.files["image"].stream).convert("RGB")
     else:
@@ -71,7 +65,6 @@ def predict():
             probs = torch.softmax(out, dim=1).cpu().numpy()[0].tolist()
             pred = int(out.argmax(dim=1).item())
         else:
-            # in case model returns tuple or other
             logits = out[0] if isinstance(out, (list,tuple)) else out
             logits = torch.tensor(logits) if not isinstance(logits, torch.Tensor) else logits
             probs = torch.softmax(logits, dim=1).cpu().numpy()[0].tolist()
