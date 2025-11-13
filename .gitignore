@@ -29,3 +29,5 @@ manifests/
 !training/
 !static/
 !readme.md
+
+*.onnx
