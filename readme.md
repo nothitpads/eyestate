@@ -16,6 +16,9 @@
 
 # Real-Time Eye State Recognition
 
+![ezgif-68e2c2a89fa08409](https://github.com/user-attachments/assets/6200e60a-3cbb-4813-8c0b-4c826724fffc)
+
+
 ## Abstract
 
 I trained an EfficientNetV2-S model to classify eye crops as **open** or **closed**.
@@ -163,4 +166,5 @@ python -m onnxruntime.tools.convert_onnx_models_to_onnx \
 python server-predict.py
 python -m http.server 3000
 ```
+
 
