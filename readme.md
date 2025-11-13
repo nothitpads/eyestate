@@ -34,7 +34,7 @@ The final model was exported to **ONNX** for browser deployment.
 # Dataset
 
 Two labels: **open**, **closed**.
-Data sourced from the **MRL dataset** with additional augmentations.
+Data sourced from the **[MRL dataset]([url](https://www.kaggle.com/datasets/imadeddinedjerarda/mrl-eye-dataset?))** with additional augmentations.
 Training/validation/testing splits were created after balancing.
 
 * Total samples: ~80k
@@ -166,5 +166,6 @@ python -m onnxruntime.tools.convert_onnx_models_to_onnx \
 python server-predict.py
 python -m http.server 3000
 ```
+
 
 
