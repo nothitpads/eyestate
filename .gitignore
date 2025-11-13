@@ -26,7 +26,6 @@ manifests/
 # Exceptions: always commit these
 !requirements.txt
 !index.html
-!training/
 !static/
 !readme.md
 
