@@ -1,0 +1,31 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.env
+.env
+
+.vscode/
+
+data/
+weights/
+models/
+*.pth
+*.csv
+*.txt
+
+.ipynb_checkpoints/
+
+# Ignore manifests, but allow code and config
+manifests/
+!requirements.txt
+!index.html
+!*.py
+!*.ipynb
+
+# Exceptions: always commit these
+!requirements.txt
+!index.html
+!training/
+!static/
+!readme.md
