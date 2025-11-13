@@ -35,12 +35,6 @@ Data sourced from the **MRL dataset** with additional augmentations.
 Training/validation/testing splits were created after balancing.
 
 * Total samples: ~80k
-* Approx split:
-
-  * Train: 1 750
-  * Validation: 375
-  * Test: 375
-* No synthetic images beyond augmentations.
 
 ### Augmentations (training only)
 
@@ -169,3 +163,4 @@ python -m onnxruntime.tools.convert_onnx_models_to_onnx \
 python server-predict.py
 python -m http.server 3000
 ```
+
